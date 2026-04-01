@@ -1,0 +1,18 @@
+version: 2
+
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: [ '🤖 Dependencies', 'skip-changelog' ]
+    commit-message:
+      prefix: "deps"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: [ '🛡️ Infrastructure / CI', 'skip-changelog' ]
+    commit-message:
+      prefix: "ci"

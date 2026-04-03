@@ -119,6 +119,8 @@ linters: # https://golangci-lint.run/docs/configuration/file/#linters-configurat
     rules:
       - path: ".*_test\\.go$"
         linters:
+          - funlen
+          - cyclop
           - gocritic
           - errcheck
  

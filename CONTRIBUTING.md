@@ -20,6 +20,16 @@
 - `feat` → minor
 - `fix` / `perf` / `refactor` → patch
 
+### Makefile
+
+| Цель | Описание |
+|---|---|
+| `make code-gen` | Запустить `go generate ./...` |
+| `make lint` | Запустить golangci-lint |
+| `make test` | Генерация кода + тесты с coverage |
+| `make prof` | Собрать профили (cpu, mem, block, mutex) |
+| `make prof-view` | Открыть профиль в браузере (`FILE=cpu.out` по умолчанию) |
+
 ## Требования к коду
 
 Подробно описаны в [`PULL_REQUEST_TEMPLATE`](https://github.com/selfshop-dev/.github/blob/main/PULL_REQUEST_TEMPLATE.md?plain=1) (раздел Checklist).

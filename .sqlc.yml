@@ -1,0 +1,57 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    schema: "migrations/db/postgres"
+    queries: "internal/db/queries"
+    gen:
+      go:
+        package: "gen"
+        out: "internal/db/gen"
+        sql_package: "pgx/v5"
+        
+        emit_empty_slices: true
+
+        emit_interface: true
+        emit_json_tags: true
+
+        emit_pointers_for_null_types: true
+        emit_result_struct_pointers: false
+        emit_params_struct_pointers: false
+
+        rename:
+          display_image_url: "DisplayImageURL"
+
+        overrides:
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+
+          - db_type: "uuid"
+            nullable: true
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+              pointer: true
+
+          - db_type: "timestamptz"
+            go_type: "time.Time"
+
+          - db_type: "timestamptz"
+            nullable: true
+            go_type:
+              type: "time.Time"
+              pointer: true
+
+          - db_type: "jsonb"
+            go_type: "json.RawMessage"
+
+          - db_type: "numeric"
+            go_type:
+              import: "github.com/shopspring/decimal"
+              type: "Decimal"
+
+          - db_type: "product_status"
+            go_type:
+              import: "github.com/selfshop-dev/ms-catalog/internal/domain"
+              type: "ProductStatus"

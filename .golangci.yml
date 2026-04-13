@@ -7,7 +7,7 @@ run: # https://golangci-lint.run/docs/configuration/file/#run-configuration
 linters: # https://golangci-lint.run/docs/configuration/file/#linters-configuration
   default: none
   enable:
-    # ── Bugs & correctness ────────────────────────────────────────────────────
+    # ── Bugs & correctnes ────────────────────────────────────────────────────
     - govet           # https://golangci-lint.run/docs/linters/configuration/#govet
     - noctx           # https://golangci-lint.run/docs/linters/configuration/#noctx
     - staticcheck     # https://golangci-lint.run/docs/linters/configuration/#staticcheck
@@ -31,6 +31,9 @@ linters: # https://golangci-lint.run/docs/configuration/file/#linters-configurat
     - bidichk # https://golangci-lint.run/docs/linters/configuration/#bidichk
 
     # ── Style ────────────────────────────────────────────────────────────────
+    - dupword    # https://golangci-lint.run/docs/linters/configuration/#dupword
+    - godot      # https://golangci-lint.run/docs/linters/configuration/#godot
+    - intrange   # https://golangci-lint.run/docs/linters/configuration/#intrange
     - misspell   # https://golangci-lint.run/docs/linters/configuration/#misspell
     - gocritic   # https://golangci-lint.run/docs/linters/configuration/#gocritic
     - nolintlint # https://golangci-lint.run/docs/linters/configuration/#nolintlint
@@ -49,10 +52,22 @@ linters: # https://golangci-lint.run/docs/configuration/file/#linters-configurat
     - thelper          # https://golangci-lint.run/docs/linters/configuration/#thelper
     - usetesting       # https://golangci-lint.run/docs/linters/configuration/#usetesting
 
+    # ── HTTP ─────────────────────────────────────────────────────────────────
+    - bodyclose # https://golangci-lint.run/docs/linters/configuration/#bodyclose
+
+    # ── Logging ──────────────────────────────────────────────────────────────
+    - loggercheck # https://golangci-lint.run/docs/linters/configuration/#loggercheck
+
+    # ── SQL / Resources ──────────────────────────────────────────────────────
+    - sqlclosecheck # https://golangci-lint.run/docs/linters/configuration/#sqlclosecheck
+
   settings:
     errcheck:
       check-type-assertions: true
       check-blank: true
+
+    cyclop:
+      max-complexity: 15
  
     govet:
       enable-all: true
@@ -91,12 +106,16 @@ linters: # https://golangci-lint.run/docs/configuration/file/#linters-configurat
         - name: superfluous-else
         - name: unreachable-code
         - name: redefines-builtin-id
+        - name: cognitive-complexity
+          arguments: [15]
 
     gocritic:
       # style tag excluded: too noisy across diverse codebases.
       # performance tag excluded: add it in perf-sensitive repos.
       enabled-tags:
         - diagnostic
+        - performance
+        - opinionated
  
     nolintlint:
       require-explanation: true
@@ -111,21 +130,64 @@ linters: # https://golangci-lint.run/docs/configuration/file/#linters-configurat
       - common-false-positives
       - std-error-handling
     paths:
+      - "docs/docs\\.go$"
       - ".*_mock\\.go$"
       - ".*/gen/.*"
+      - ".*/mocks/.*"
       - "\\.pb(\\.gw)?\\.go$"
       - "\\.sql\\.go$"
       - "\\.gen\\.go$"
     rules:
+      # Domain models are ordered by semantic meaning, not memory layout.
+      # The allocation volume does not justify sacrificing readability.
+      - path: "internal/domain/.*\\.go$"
+        linters:
+          - govet
+        text: "fieldalignment"
+
+      # internal/, pkg/, testhelpers/ — exported comments are not required:
+      # internal is package-private by design, pkg/ will be extracted to
+      # separate repositories (comments added then), testhelpers/ is test-only.
+      - path: "(internal|pkg|testhelpers)/.*\\.go$"
+        linters:
+          - revive
+        text: "exported:"
+
+      # swaggo godoc annotations use "body body" which is valid swaggo syntax,
+      # not a duplicate word.
+      - path: "internal/handler/v1/.*\\.go$"
+        linters:
+          - dupword
+        text: "body"
+
+      # Command structs are value types by design — passing by pointer would
+      # compromise immutability guarantees without meaningful performance gain.
+      - path: "internal/usecase/.*\\.go$"
+        linters:
+          - gocritic
+        text: "hugeParam"
+
+      # Suite.ctx is intentionally reassigned per test in SetupTest,
+      # not accumulated in a loop — fatcontext does not apply here.
+      - path: "pkg/db/dbtest/suite\\.go$"
+        linters:
+          - fatcontext
+
+      # E2E and adapter integration tests share a single database container
+      # via sync.Once — parallel execution would cause data races.
+      - path: "(tests/e2e|internal/db/dbstorage)/.*_test\\.go$"
+        linters:
+          - paralleltest
+
       - path: ".*_test\\.go$"
         linters:
           - funlen
           - cyclop
           - gocritic
           - errcheck
- 
-      # fieldalignment in test files: anonymous structs in table-driven tests
-      # do not benefit from memory layout optimisation.
+
+      # Anonymous structs in table-driven tests do not benefit from
+      # memory layout optimisation.
       - path: ".*_test\\.go$"
         linters:
           - govet
@@ -145,4 +207,4 @@ formatters: # https://golangci-lint.run/docs/configuration/file/#formatters-conf
       # A list of prefixes, which, if set, checks import paths
       # with the given prefixes are grouped after 3rd-party packages.
       local-prefixes:
-        - github.com/selfshop-dev
+        - github.com/selfshop-dev/ms-catalog

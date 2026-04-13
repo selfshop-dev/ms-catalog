@@ -1,0 +1,36 @@
+include:
+  - deploy/compose.base.yml
+
+services:
+  backend_dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.hot-reload
+      args:
+        HTTP_PORT:  ${INIT__ENTRY__HTTP__PORT:-8081}
+        GO_VERSION: ${GO_VERSION:-1.26}
+    ports: 
+      - "${INIT__ENTRY__HTTP__PORT:-8081}:\
+         ${INIT__ENTRY__HTTP__PORT:-8081}"
+    restart: unless-stopped
+    volumes:
+      - ./.air.toml:/app/.air.toml:ro
+      - ./go.mod:/app/go.mod:ro
+      - ./go.sum:/app/go.sum:ro
+      - ./cmd:/app/cmd:ro
+      - ./docs:/app/docs:ro
+      - ./internal:/app/internal:ro
+      - ./pkg:/app/pkg:ro
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+    env_file: [ .env ]
+    networks: [ main ]
+    tty: true
+    stdin_open: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  go-mod-cache:
+  go-build-cache:

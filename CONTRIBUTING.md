@@ -20,15 +20,68 @@
 - `feat` → minor
 - `fix` / `perf` / `refactor` → patch
 
-### Makefile
 
+## Makefile
+ 
+Все команды запускаются из корня репозитория через `make <цель>`. Полный список с описаниями — `make help`.
+ 
+### Production
+ 
+| Цель | Описание |
+|---|---|
+| `make prod` | Собрать образ через ko и запустить prod окружение |
+| `make prod-build` | Собрать prod образ через ko |
+| `make prod-up` | Запустить prod окружение |
+| `make prod-down` | Остановить prod окружение |
+| `make prod-logs` | Показать логи prod окружения |
+| `make prod-restart` | Перезапустить prod окружение |
+ 
+### Development (hot-reload)
+ 
+| Цель | Описание |
+|---|---|
+| `make dev` | Собрать образ и запустить dev окружение с hot-reload |
+| `make dev-build` | Пересобрать dev образ |
+| `make dev-up` | Запустить dev окружение |
+| `make dev-down` | Остановить dev окружение |
+| `make dev-logs` | Показать логи dev окружения |
+| `make dev-restart` | Перезапустить dev окружение |
+ 
+### Генерация кода
+ 
 | Цель | Описание |
 |---|---|
 | `make code-gen` | Запустить `go generate ./...` |
+| `make sqlc-gen` | Сгенерировать Go-код из SQL-запросов через sqlc |
+| `make swag-gen` | Сгенерировать OpenAPI spec через swag |
+ 
+### Тестирование и анализ
+ 
+| Цель | Описание |
+|---|---|
+| `make test` | Генерация кода + unit-тесты с coverage |
+| `make test-e2e` | End-to-end тесты (требует запущенной БД) |
 | `make lint` | Запустить golangci-lint |
-| `make test` | Генерация кода + тесты с coverage |
 | `make prof` | Собрать профили (cpu, mem, block, mutex) |
-| `make prof-view` | Открыть профиль в браузере (`FILE=cpu.out` по умолчанию) |
+| `make prof-view` | Открыть профиль в браузере (`FILE=mem.out`, по умолчанию `cpu.out`) |
+ 
+### Миграции
+ 
+| Цель | Описание |
+|---|---|
+| `make mig-diff NAME=<name>` | Создать новую миграцию по diff схемы |
+| `make mig-apply` | Применить миграции к БД |
+| `make mig-lint` | Проверить качество последней миграции |
+| `make mig-valid` | Валидировать все миграции |
+| `make mig-status` | Показать статус применённых миграций |
+ 
+### Утилиты
+ 
+| Цель | Описание |
+|---|---|
+| `make version` | Показать версию, commit hash, дату сборки |
+| `make clean` | Удалить артефакты сборки и остановить контейнеры |
+| `make down` | Остановить все окружения |
 
 ## Требования к коду
 

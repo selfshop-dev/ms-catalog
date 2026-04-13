@@ -39,7 +39,6 @@ mocks/
 # Explicit suffixes for generated files outside gen/ (edge cases)
 *.pb.go
 *.pb.gw.go
-*.sql.go
 *.gen.go
 
 # Go workspace

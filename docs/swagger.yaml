@@ -1,0 +1,431 @@
+basePath: /api/v1
+definitions:
+  response.envelope:
+    properties:
+      data:
+        description: success payload; omitted on errors
+      detail:
+        description: human-readable error detail; omitted on success and KindInternal
+        type: string
+      extensions:
+        description: validation field errors; omitted on success
+      instance:
+        description: request path, e.g. "/users/42"
+        type: string
+      meta:
+        additionalProperties: {}
+        description: per-request metadata (e.g. request_id); omitted if extractor
+          returns nil
+        type: object
+      status:
+        description: HTTP status code, e.g. 404
+        type: integer
+      title:
+        description: HTTP status text, e.g. "Not Found"
+        type: string
+      type:
+        description: |-
+          Type is the RFC-9457 problem type URI. Always "about:blank" —
+          signals that the status code is the primary classification.
+        type: string
+    type: object
+  v1handler.CreateProductRequest:
+    properties:
+      currency:
+        example: USD
+        type: string
+      description:
+        example: Product Description
+        type: string
+      display_image_url:
+        example: https://example.com/image.jpg
+        type: string
+      name:
+        example: Product Name
+        maxLength: 128
+        minLength: 1
+        type: string
+      price_cents:
+        example: 10000
+        minimum: 0
+        type: integer
+      short_description:
+        example: Product Short Description
+        maxLength: 256
+        type: string
+      slug:
+        example: product-name
+        maxLength: 128
+        minLength: 1
+        type: string
+      status:
+        enum:
+        - active
+        - inactive
+        - draft
+        - archived
+        example: active
+        type: string
+    required:
+    - name
+    - slug
+    type: object
+  v1handler.CreateProductResponse:
+    properties:
+      id:
+        type: string
+    type: object
+  v1handler.GetActiveProductsResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/v1handler.GetProductResponse'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+    type: object
+  v1handler.GetProductResponse:
+    properties:
+      created_at:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      display_image_url:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      price_cents:
+        type: integer
+      short_description:
+        type: string
+      slug:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  v1handler.UpdateProductRequest:
+    properties:
+      currency:
+        example: USD
+        type: string
+      description:
+        example: Product Description
+        type: string
+      display_image_url:
+        example: https://example.com/image.jpg
+        type: string
+      name:
+        example: Product Name
+        maxLength: 128
+        minLength: 1
+        type: string
+      price_cents:
+        example: 10000
+        minimum: 0
+        type: integer
+      short_description:
+        example: Product Short Description
+        maxLength: 256
+        type: string
+      slug:
+        example: product-name
+        maxLength: 128
+        minLength: 1
+        type: string
+    required:
+    - currency
+    - name
+    - slug
+    type: object
+  v1handler.UpdateProductResponse:
+    properties:
+      id:
+        type: string
+    type: object
+  v1handler.UpdateStatusProductRequest:
+    properties:
+      status:
+        enum:
+        - active
+        - inactive
+        - draft
+        - archived
+        example: active
+        type: string
+    required:
+    - status
+    type: object
+  v1handler.UpdateStatusProductResponse:
+    properties:
+      id:
+        type: string
+    type: object
+info:
+  contact:
+    name: imidll
+    url: https://github.com/selfshop-dev/ms-catalog
+  description: REST API для управления каталогом товаров и категорий.
+  license:
+    name: MIT
+    url: https://github.com/selfshop-dev/ms-catalog/blob/main/LICENSE
+  title: selfshop-dev/ms-catalog API
+  version: 0.1.0-dev
+paths:
+  /products:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new product in the catalog and returns its generated
+        UUID.
+      parameters:
+      - description: Product payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1handler.CreateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/v1handler.CreateProductResponse'
+        "400":
+          description: Invalid JSON body or failed field validation
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "409":
+          description: Slug already exists
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "422":
+          description: Semantic validation error with per-field detail
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.envelope'
+      summary: Create a new product
+      tags:
+      - products
+  /products/{id}:
+    delete:
+      description: Permanently deletes a product by its UUID.
+      parameters:
+      - description: Product UUID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid UUID format
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "404":
+          description: Product not found
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.envelope'
+      summary: Delete a product
+      tags:
+      - products
+    get:
+      description: Returns a single product by its UUID.
+      parameters:
+      - description: Product UUID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1handler.GetProductResponse'
+        "400":
+          description: Invalid UUID format
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "404":
+          description: Product not found
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.envelope'
+      summary: Get a product by ID
+      tags:
+      - products
+    put:
+      consumes:
+      - application/json
+      description: Fully replaces a product's fields by its UUID.
+      parameters:
+      - description: Product UUID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Product payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1handler.UpdateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1handler.UpdateProductResponse'
+        "400":
+          description: Invalid UUID format or JSON body
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "404":
+          description: Product not found
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "409":
+          description: Slug already exists
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "422":
+          description: Semantic validation error with per-field detail
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.envelope'
+      summary: Update a product
+      tags:
+      - products
+  /products/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: 'Changes the status of a product. Allowed values: active, inactive,
+        draft, archived.'
+      parameters:
+      - description: Product UUID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1handler.UpdateStatusProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1handler.UpdateStatusProductResponse'
+        "400":
+          description: Invalid UUID format or JSON body
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "404":
+          description: Product not found
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.envelope'
+      summary: Update status product
+      tags:
+      - products
+  /products/{slug}/by-slug:
+    get:
+      description: Returns a single product by its slug.
+      parameters:
+      - description: Product slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1handler.GetProductResponse'
+        "400":
+          description: Invalid slug
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "404":
+          description: Product not found
+          schema:
+            $ref: '#/definitions/response.envelope'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.envelope'
+      summary: Get a product by slug
+      tags:
+      - products
+  /products/active:
+    get:
+      description: Returns a paginated list of active products.
+      parameters:
+      - description: Max items to return (1–100, default 20)
+        in: query
+        name: limit
+        type: integer
+      - description: Number of items to skip (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1handler.GetActiveProductsResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.envelope'
+      summary: List active products
+      tags:
+      - products
+schemes:
+- http
+swagger: "2.0"

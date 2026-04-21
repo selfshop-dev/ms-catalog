@@ -10,7 +10,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-playground/validator/v10 v10.30.2
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.9.1
+	github.com/jackc/pgx/v5 v5.9.2
 	github.com/joho/godotenv v1.5.1
 	github.com/selfshop-dev/lib-apperr v0.0.0-20260404154511-1e7595bba679
 	github.com/selfshop-dev/lib-config v0.0.0-20260407121210-609babdd3165
